@@ -37,7 +37,7 @@ namespace CryptoExchange.Services.Classes
                     x.symbol
                 });
 
-                return new MainReturn("Consulta realizada com sucesso!", lstCoints);
+                return new MainReturn(" realizada com sucesso!", lstCoints);
 
             }
             catch (Exception)
