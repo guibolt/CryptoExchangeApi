@@ -1,17 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using CryptoExchange.Api.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using CryptoExchange.Api.Configuration.HeathCheck;
+using CryptoExchange.Api.Configuration.HealthCheck;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace CryptoExchange.Api
 {
@@ -27,8 +23,11 @@ namespace CryptoExchange.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.ResolveDependencies(Configuration);
             services.AddControllers();
+            services.ResolveDependencies(Configuration);
+
+            services.AddHealthChecks()
+                .AddCheck< MemoryHealthCheck>("memory_check",HealthStatus.Unhealthy);
             services.AddSwaggerGen(c => c.SwaggerDoc("v1", new OpenApiInfo { Title = "CryptoExchange.Api", Version = "v1" }));
 
             services.AddCors(opt =>
@@ -56,7 +55,11 @@ namespace CryptoExchange.Api
             app.UseCors(_enableCors);
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => endpoints.MapControllers());
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHeathConfig();
+            });
         }
     }
 }
