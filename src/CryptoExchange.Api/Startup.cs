@@ -28,7 +28,7 @@ namespace CryptoExchange.Api
             services.ResolveDependencies(Configuration);
 
             services.AddHealthChecks()
-                .AddCheck< MemoryHealthCheck>("memory_check",HealthStatus.Unhealthy);
+                .AddCheck<MemoryHealthCheck>("memory_check", HealthStatus.Unhealthy);
             services.AddSwaggerGen(c => c.SwaggerDoc("v1", new OpenApiInfo { Title = "CryptoExchange.Api", Version = "v1" }));
             services.AddLogging(logging => logging.AddKissLog());
 
@@ -41,9 +41,9 @@ namespace CryptoExchange.Api
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "CryptoExchange.Api v1"));
             }
 
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "CryptoExchange.Api v1"));
             app.UseHttpsRedirection();
 
             app.UseRouting();
