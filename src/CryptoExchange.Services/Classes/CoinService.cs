@@ -129,7 +129,7 @@ namespace CryptoExchange.Services.Classes
             catch (Exception ex)
             {
                 _logger.Error(ex, methodName);
-                return new CommandReturn(true,"Erro na consulta, favor tentar novamente");
+                return new CommandReturn(false,"Erro na consulta, favor tentar novamente");
             }
 
         }

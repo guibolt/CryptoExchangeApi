@@ -1,6 +1,6 @@
 ﻿using KissLog;
 
-namespace CryptoExchange.Services
+namespace CryptoExchange.Services.Classes
 {
     public abstract class BaseService
     {
