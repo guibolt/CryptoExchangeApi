@@ -8,15 +8,16 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using KissLog;
 
 namespace CryptoExchange.Services.Classes
 {
-    public class CoinService : ICoinService
+    public class CoinService : BaseService, ICoinService
     {
         private IApiSetup _apiUrl;
         private HttpClient _client;
 
-        public CoinService(IApiSetup apiUrl, HttpClient client)
+        public CoinService(IApiSetup apiUrl, HttpClient client, ILogger logger) : base(logger)
         {
             _apiUrl = apiUrl;
             _client = client;
@@ -24,6 +25,7 @@ namespace CryptoExchange.Services.Classes
 
         public async Task<MainReturn> GetCryptoCoins()
         {
+            string methodName = nameof(GetCryptoCoins);
             try
             {
                 var response = await _client.GetAsync($"{_apiUrl.GetCoreApiUrl()}tickers/?start=0&limit=50");
@@ -37,17 +39,21 @@ namespace CryptoExchange.Services.Classes
                     x.symbol
                 });
 
+                _logger.Info(lstCoints, methodName);
                 return new MainReturn("Consulta realizada com sucesso!", lstCoints);
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Error(ex, methodName);
                 return new MainReturn("Erro na consulta, favor tentar novamente");
             }
         }
 
         public async Task<MainReturn> GetCryptoRates(string first, string secondCoin)
         {
+            string methodName = nameof(GetCryptoRates);
+
             if (string.IsNullOrEmpty(first) || string.IsNullOrEmpty(secondCoin))
                 return new MainReturn("Erro na consulta, favor tentar novamente");
 
@@ -73,27 +79,41 @@ namespace CryptoExchange.Services.Classes
                     exchanges
                 };
 
+
+                _logger.Info(resultObj, methodName);
                 return new MainReturn("Consulta realizada com sucesso!", resultObj);
             }
             catch (Exception ex)
             {
-
+                _logger.Error(ex, methodName);
                 return new MainReturn("Erro na consulta, favor tentar novamente");
             }
         }
 
         public async Task<MainReturn> GetHistorialRates(string coinSymbol, DateTime initialDate)
         {
-            var objList = new List<object>();
-            var actualDate = DateTime.Now;
-            var monthsQuantity = ((actualDate.Year - initialDate.Year) * 12) + actualDate.Month - initialDate.Month;
+            string methodName = nameof(GetHistorialRates);
+            try
+            {
+                var objList = new List<object>();
+                var actualDate = DateTime.Now;
+                var monthsQuantity = ((actualDate.Year - initialDate.Year) * 12) + actualDate.Month - initialDate.Month;
 
-            await AddCoins(coinSymbol, initialDate, objList, monthsQuantity);
+                await AddCoins(coinSymbol, initialDate, objList, monthsQuantity);
 
-            CoinLoreResponse responseApiObj = await GetCoinRecord(coinSymbol, actualDate);
-            AddCoin(coinSymbol, objList,responseApiObj);
+                CoinLoreResponse responseApiObj = await GetCoinRecord(coinSymbol, actualDate);
+                AddCoin(coinSymbol, objList, responseApiObj);
 
-            return new MainReturn("Consulta realizada com sucesso!", objList);
+
+                _logger.Info(objList, methodName);
+                return new MainReturn("Consulta realizada com sucesso!", objList);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, methodName);
+                return new MainReturn("Erro na consulta, favor tentar novamente");
+            }
+
         }
 
         private async Task AddCoins(string coinSymbol, DateTime initialDate, List<object> objList, int monthsQuantity)
