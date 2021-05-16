@@ -8,6 +8,7 @@ using CryptoExchange.Api.Configuration;
 using CryptoExchange.Api.Configuration.HeathCheck;
 using CryptoExchange.Api.Configuration.HealthCheck;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using KissLog.AspNetCore;
 
 namespace CryptoExchange.Api
 {
@@ -29,15 +30,9 @@ namespace CryptoExchange.Api
             services.AddHealthChecks()
                 .AddCheck< MemoryHealthCheck>("memory_check",HealthStatus.Unhealthy);
             services.AddSwaggerGen(c => c.SwaggerDoc("v1", new OpenApiInfo { Title = "CryptoExchange.Api", Version = "v1" }));
+            services.AddLogging(logging => logging.AddKissLog());
 
-            services.AddCors(opt =>
-            {
-                opt.AddPolicy(_enableCors, builder =>
-                {
-                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().Build();
-                }
-                );
-            });
+            services.AddCors(opt => opt.AddPolicy(_enableCors, builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().Build()));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -54,6 +49,7 @@ namespace CryptoExchange.Api
             app.UseRouting();
             app.UseCors(_enableCors);
             app.UseAuthorization();
+            app.UseKissLog(Configuration);
 
             app.UseEndpoints(endpoints =>
             {
