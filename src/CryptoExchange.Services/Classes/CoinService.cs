@@ -9,13 +9,15 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using KissLog;
+using CryptoExchange.Services.Commands;
+using CryptoExchange.Core.Command;
 
 namespace CryptoExchange.Services.Classes
 {
     public class CoinService : BaseService, ICoinService
     {
-        private IApiSetup _apiUrl;
-        private HttpClient _client;
+        private readonly IApiSetup _apiUrl;
+        private readonly HttpClient _client;
 
         public CoinService(IApiSetup apiUrl, HttpClient client, ILogger logger) : base(logger)
         {
@@ -23,9 +25,10 @@ namespace CryptoExchange.Services.Classes
             _client = client;
         }
 
-        public async Task<MainReturn> GetCryptoCoins()
+        public async Task<CommandReturn> GetCryptoCoins()
         {
             string methodName = nameof(GetCryptoCoins);
+
             try
             {
                 var response = await _client.GetAsync($"{_apiUrl.GetCoreApiUrl()}tickers/?start=0&limit=50");
@@ -40,27 +43,33 @@ namespace CryptoExchange.Services.Classes
                 });
 
                 _logger.Info(lstCoints, methodName);
-                return new MainReturn("Consulta realizada com sucesso!", lstCoints);
+                return new CommandReturn(true,"Consulta realizada com sucesso!", lstCoints);
 
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, methodName);
-                return new MainReturn("Erro na consulta, favor tentar novamente");
+                return new CommandReturn(false,"Erro na consulta, favor tentar novamente");
             }
         }
 
-        public async Task<MainReturn> GetCryptoRates(string first, string secondCoin)
+        public async Task<CommandReturn> GetCryptoRates(GetCryptoRatesCommand command )
         {
             string methodName = nameof(GetCryptoRates);
 
-            if (string.IsNullOrEmpty(first) || string.IsNullOrEmpty(secondCoin))
-                return new MainReturn("Erro na consulta, favor tentar novamente");
+            if (!command.IsValid())
+            {
+                var errors = command.Errors();
+                _logger.Error(errors, methodName);
 
+                return new CommandReturn(false, errors, "");
+            }
+
+         
             try
             {
                 _client.DefaultRequestHeaders.Add("X-CoinAPI-Key", _apiUrl.GetCoinApiKey());
-                var response = await _client.GetAsync($"{_apiUrl.GetCoinApiUrl()}exchangerate/{first}/{secondCoin}");
+                var response = await _client.GetAsync($"{_apiUrl.GetCoinApiUrl()}exchangerate/{command.FirstCoin}/{command.SecondCoin}");
                 var jsonContent = await response.Content.ReadAsStringAsync();
 
                 var responseApiObj = JsonConvert.DeserializeObject<ApiCoinResponse>(jsonContent);
@@ -81,37 +90,46 @@ namespace CryptoExchange.Services.Classes
 
 
                 _logger.Info(resultObj, methodName);
-                return new MainReturn("Consulta realizada com sucesso!", resultObj);
+                return new CommandReturn(true,"Consulta realizada com sucesso!", resultObj);
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, methodName);
-                return new MainReturn("Erro na consulta, favor tentar novamente");
+                return new CommandReturn(false,"Erro na consulta, favor tentar novamente");
             }
         }
 
-        public async Task<MainReturn> GetHistorialRates(string coinSymbol, DateTime initialDate)
+        public async Task<CommandReturn> GetHistorialRates(GetHistorialRatesCommand command)
         {
             string methodName = nameof(GetHistorialRates);
+
+            if (!command.IsValid())
+            {
+                var errors = command.Errors();
+                _logger.Error(errors, methodName);
+
+                return new CommandReturn(false, errors, "");
+            }
+            
             try
             {
                 var objList = new List<object>();
                 var actualDate = DateTime.Now;
-                var monthsQuantity = ((actualDate.Year - initialDate.Year) * 12) + actualDate.Month - initialDate.Month;
+                var monthsQuantity = ((actualDate.Year - command.InitialDate.Year) * 12) + actualDate.Month - command.InitialDate.Month;
 
-                await AddCoins(coinSymbol, initialDate, objList, monthsQuantity);
+                await AddCoins(command.CoinSymbol, command.InitialDate, objList, monthsQuantity);
 
-                CoinLoreResponse responseApiObj = await GetCoinRecord(coinSymbol, actualDate);
-                AddCoin(coinSymbol, objList, responseApiObj);
+                CoinLoreResponse responseApiObj = await GetCoinRecord(command.CoinSymbol, actualDate);
+                AddCoin(command.CoinSymbol, objList, responseApiObj);
 
 
                 _logger.Info(objList, methodName);
-                return new MainReturn("Consulta realizada com sucesso!", objList);
+                return new CommandReturn(true,"Consulta realizada com sucesso!", objList);
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, methodName);
-                return new MainReturn("Erro na consulta, favor tentar novamente");
+                return new CommandReturn(true,"Erro na consulta, favor tentar novamente");
             }
 
         }

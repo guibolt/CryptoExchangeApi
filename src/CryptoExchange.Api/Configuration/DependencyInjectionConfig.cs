@@ -1,5 +1,4 @@
-﻿using CryptoExchange.Core.Helpers;
-using CryptoExchange.Core.Helpers.Api;
+﻿using CryptoExchange.Core.Helpers.Api;
 using CryptoExchange.Core.Interfaces.Api;
 using CryptoExchange.Core.Interfaces.Service;
 using CryptoExchange.Services.Classes;
