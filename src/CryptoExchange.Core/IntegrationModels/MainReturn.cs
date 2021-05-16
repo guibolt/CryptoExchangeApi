@@ -3,7 +3,7 @@
     public class MainReturn
     {
         public string Message { get; set; }
-        public bool Sucess { get; set; }
+        public bool Success { get; set; }
         public object Data { get; set; }
 
         public MainReturn(string message)
@@ -14,7 +14,7 @@
         public MainReturn(string message, object data)
         {
             Message = message;
-            Sucess = true;
+            Success = true;
             Data = data;
         }
     }
