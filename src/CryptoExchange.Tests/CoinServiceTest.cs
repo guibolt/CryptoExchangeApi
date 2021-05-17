@@ -86,7 +86,7 @@ namespace CryptoExchange.Tests
             var service = new CoinService(_apiSetup.Object, _client.Object, _logger.Object);
 
             _apiSetup.Setup(x => x.GetCoinLoreApiUrl()).Returns("http://api.coinlayer.com/");
-            _apiSetup.Setup(x => x.GetCoinLoreKey()).Returns("750f0aabc90383f0eb741a4811d81708");
+            _apiSetup.Setup(x => x.GetCoinLoreKey()).Returns("db185d73e2bc10752d0ea3c98a9565fc");
 
             //Act
             var commandReturn = await service.GetHistorialRates(command);
